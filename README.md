@@ -1,0 +1,1 @@
+https://rex2go.github.io/react-slot-machine/
