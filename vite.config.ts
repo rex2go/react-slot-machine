@@ -6,4 +6,5 @@ export default defineConfig({
   plugins: [react({
     jsxImportSource: "@emotion/react",
   })],
+  base: "/react-slot-machine/"
 })
