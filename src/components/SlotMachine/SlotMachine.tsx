@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 import { useSlotMachineStyles } from "./SlotMachine.style"
 
 type SlotsType = {
+    id: string,
     y: string,
     durationSeconds: number,
-    items: string[]
+    items: {
+        id: string,
+        value: string, 
+    }[]
 }[]
 
 export const SlotMachine = () => {
@@ -16,7 +20,9 @@ export const SlotMachine = () => {
     const [slotCount, setSlotCount] = useState<number>(3);
     const [itemCount, setItemCount] = useState<number>(64);
 
-    const getRandomSlot = () => {
+    const [spinning, setSpinning] = useState<boolean>(false);
+
+    const getRandomItem = () => {
         return ["🍎", "👑", "🏹", "🎳", "🔥", "🍕"][(Math.floor(Math.random() * 6))];
     }
 
@@ -25,23 +31,27 @@ export const SlotMachine = () => {
 
         for(let slot = 0; slot < slotCount; slot++) {
             generatedSlots.push({
+                id: String(crypto.randomUUID()),
                 y: `${itemCount * 5 - 4 * 4 + 1}rem`,
                 durationSeconds: 0,
                 items: [],
             });
 
             for(let item = 0; item < itemCount; item++) {
-                if(item < 3 && slots.length >= 3) {
-                    const oldSlots = slots[slot].items;
+                const oldSlots = slots[slot]?.items;
 
+                if(oldSlots && item < 3 && oldSlots.length >= 3) {
                     generatedSlots[slot].items.push(oldSlots[oldSlots.length - 3 + item]);
 
                     continue;
                 }
 
-                const randomSlot = getRandomSlot();
+                const randomItem = getRandomItem();
 
-                generatedSlots[slot].items.push(randomSlot);
+                generatedSlots[slot].items.push({
+                    id: String(crypto.randomUUID()),
+                    value: randomItem,
+                });
             }
         }
 
@@ -53,7 +63,9 @@ export const SlotMachine = () => {
         let win = true;
         
         slots.forEach((slot) => {
-            if(slot.items[slot.items.length - 1] !== previousSlot.items[previousSlot.items.length - 1]) {
+            if(!win) return;
+
+            if(slot.items[slot.items.length - 2].value !== previousSlot.items[previousSlot.items.length - 2].value) {
                 win = false;
             }
 
@@ -61,7 +73,7 @@ export const SlotMachine = () => {
         });
 
         if(win) {
-            alert();
+            alert("Win");
         }
     }
 
@@ -71,9 +83,13 @@ export const SlotMachine = () => {
         });
 
         generateSlots(slotCount, itemCount, slots);
+
+        setSpinning(false);
     }
 
     const spin = () => {
+        setSpinning(true);
+
         let maxDuration = 0;
 
         slots.forEach((row, index) => {
@@ -109,16 +125,16 @@ export const SlotMachine = () => {
 
         <div css={styles.rowsContainer}>
             {
-                slots.map((slot, slotIndex) => 
+                slots.map((slot) => 
                     <div css={styles.slotsContainer}
-                        key={slotIndex}
+                        key={slot.id}
                         style={{
                             transform: `translateY(${slot.y})`,
                             transitionDuration: `${slot.durationSeconds}s`
                         }}>
                         {
-                            slot.items.map((item, itemIndex) => 
-                                <div key={`${slotIndex}:${itemIndex}`} css={styles.slotContainer}>{item}</div>
+                            slot.items.map((item) => 
+                                <div key={item.id} css={styles.slotContainer}>{item.value}</div>
                             )
                         }
                     </div>
@@ -126,17 +142,17 @@ export const SlotMachine = () => {
             }
         </div>
 
-        <button onClick={() => spin()}>Spin</button>
+        <button onClick={() => !spinning && spin()}>Spin</button>
 
         <div css={styles.settingsContainer}>
             <label>
                 <span>Slot Count ({slotCount})</span>
-                <input type="range" min="1" max="9" value={slotCount} onChange={(event) => setSlotCount(parseInt(event.target.value))}></input>
+                <input type="range" min="2" max="9" value={slotCount} onChange={(event) => !spinning && setSlotCount(parseInt(event.target.value))}></input>
             </label>
 
             <label>
                 <span>Item Count ({itemCount})</span>
-                <input type="range" min="16" max="256" value={itemCount} onChange={(event) => setItemCount(parseInt(event.target.value))}></input>
+                <input type="range" min="16" max="256" value={itemCount} onChange={(event) => !spinning && setItemCount(parseInt(event.target.value))}></input>
             </label>
         </div>
     </section>
