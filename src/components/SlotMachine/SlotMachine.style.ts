@@ -62,7 +62,6 @@ export const useSlotMachineStyles = () => ({
         padding: "1rem",
         borderRadius: "1rem",
         marginTop: "2rem",
-        opacity: 0.5,
         
         "> label": {
             display: "flex",
